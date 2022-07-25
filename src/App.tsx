@@ -1,87 +1,14 @@
-import React, { Suspense, useState, useRef, useMemo, useEffect } from 'react';
+import React, { Suspense, useState, useRef, useMemo, useEffect, ReactNode } from 'react';
+import { BlendFunction } from 'postprocessing';
 import { useImmer } from 'use-immer';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Extrude, OrbitControls, PresentationControls, Ring, Center } from '@react-three/drei';
-import { BoxBufferGeometry, DoubleSide, Group, Mesh, Shape, Vector3 } from 'three';
-import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { Canvas, useThree, useFrame, extend } from '@react-three/fiber';
+import { OrbitControls, Center, OrthographicCamera } from '@react-three/drei';
+import { DoubleSide, Scene, Vector3 } from 'three';
 import classNames from 'classnames';
-import type { Vector3 as Vector3Prop } from '@react-three/fiber/dist/declarations/src/three-types';
-
-type CustomThreeObj = {
-    position?: Vector3Prop | undefined;
-    opacity?: number;
-};
-
-function OBlock({ position, opacity }: CustomThreeObj) {
-    const ref = useRef<Group>(null!);
-    useFrame((state, delta) => {
-        ref.current.rotation.y += delta * 1.25;
-    });
-
-    return (
-        <group position={position} ref={ref}>
-            <mesh position={[0, 0, -0.5]}>
-                <ringGeometry args={[1.6, 2.5, 32]} />
-                <meshStandardMaterial
-                    color={'orange'}
-                    side={DoubleSide}
-                    opacity={opacity}
-                    transparent
-                />
-            </mesh>
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[2.5, 2.5, 1, 32, undefined, true]} />
-                <meshStandardMaterial
-                    color={'orange'}
-                    side={DoubleSide}
-                    opacity={opacity}
-                    transparent
-                />
-            </mesh>
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[1.6, 1.6, 1, 32, undefined, true]} />
-                <meshStandardMaterial
-                    color={'orange'}
-                    side={DoubleSide}
-                    opacity={opacity}
-                    transparent
-                />
-            </mesh>
-            <mesh position={[0, 0, 0.5]}>
-                <ringGeometry args={[1.6, 2.5, 32]} />
-                <meshStandardMaterial
-                    color={'orange'}
-                    side={DoubleSide}
-                    opacity={opacity}
-                    transparent
-                />
-            </mesh>
-        </group>
-    );
-}
-
-function XBlock({ position, opacity }: CustomThreeObj) {
-    const geometry = useMemo(() => {
-        const firstGeo = new BoxBufferGeometry(1, 5, 1);
-        const secondGeo = new BoxBufferGeometry(1, 5, 1);
-
-        firstGeo.rotateZ(40);
-        secondGeo.rotateZ(-40);
-
-        return mergeBufferGeometries([firstGeo, secondGeo]);
-    }, []);
-
-    const ref = useRef<Mesh>(null!);
-    useFrame((state, delta) => {
-        ref.current.rotation.y += delta;
-    });
-
-    return (
-        <mesh ref={ref} geometry={geometry} position={position}>
-            <meshStandardMaterial side={DoubleSide} color="orange" opacity={opacity} transparent />
-        </mesh>
-    );
-}
+import XBlock from './components/XBlock';
+import OBlock from './components/OBlock';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import { KernelSize } from 'postprocessing';
 
 function createGrid(): Array<Array<Array<string | number>>> {
     return new Array(4).fill(new Array(4).fill(new Array(4).fill(0)));
@@ -121,8 +48,6 @@ const checkWin = (
         const combo = [location.clone()];
 
         for (let i = 0; i < 3; i++) {
-            // console.log('forward: ', forward);
-            // console.log('backward: ', backward);
             forward.addVectors(forward, direction);
             backward.subVectors(backward, direction);
 
@@ -163,6 +88,113 @@ const checkWin = (
 };
 
 const BLOCK_DISTANCE = 6;
+
+function Grid() {
+    return (
+        <>
+            <mesh receiveShadow position={[9, 9, 3]}>
+                <planeGeometry args={[24, 24, 1, 1]} />
+                <meshStandardMaterial
+                    color="white"
+                    side={DoubleSide}
+                    opacity={0.05}
+                    transparent
+                    depthWrite={false}
+                    depthTest={false}
+                />
+            </mesh>
+            <mesh receiveShadow position={[9, 9, 9]}>
+                <planeGeometry args={[24, 24, 1, 1]} />
+                <meshStandardMaterial
+                    color="white"
+                    side={DoubleSide}
+                    opacity={0.05}
+                    transparent
+                    depthWrite={false}
+                    depthTest={false}
+                />
+            </mesh>
+            <mesh receiveShadow position={[9, 9, 15]}>
+                <planeGeometry args={[24, 24, 1, 1]} />
+                <meshStandardMaterial
+                    color="white"
+                    side={DoubleSide}
+                    opacity={0.05}
+                    transparent
+                    depthWrite={false}
+                    depthTest={false}
+                />
+            </mesh>
+            <mesh receiveShadow position={[9, 3, 9]} rotation={[Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[24, 24, 1, 1]} />
+                <meshStandardMaterial
+                    color="white"
+                    side={DoubleSide}
+                    opacity={0.05}
+                    transparent
+                    depthWrite={false}
+                    depthTest={false}
+                />
+            </mesh>
+            <mesh receiveShadow position={[9, 9, 9]} rotation={[Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[24, 24, 1, 1]} />
+                <meshStandardMaterial
+                    color="white"
+                    side={DoubleSide}
+                    opacity={0.05}
+                    transparent
+                    depthWrite={false}
+                    depthTest={false}
+                />
+            </mesh>
+            <mesh receiveShadow position={[9, 15, 9]} rotation={[Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[24, 24, 1, 1]} />
+                <meshStandardMaterial
+                    color="white"
+                    side={DoubleSide}
+                    opacity={0.05}
+                    transparent
+                    depthWrite={false}
+                    depthTest={false}
+                />
+            </mesh>
+            <mesh receiveShadow position={[3, 9, 9]} rotation={[0, Math.PI / 2, 0]}>
+                <planeGeometry args={[24, 24, 1, 1]} />
+                <meshStandardMaterial
+                    color="white"
+                    side={DoubleSide}
+                    opacity={0.05}
+                    transparent
+                    depthWrite={false}
+                    depthTest={false}
+                />
+            </mesh>
+            <mesh receiveShadow position={[9, 9, 9]} rotation={[0, Math.PI / 2, 0]}>
+                <planeGeometry args={[24, 24, 1, 1]} />
+                <meshStandardMaterial
+                    color="white"
+                    side={DoubleSide}
+                    opacity={0.05}
+                    transparent
+                    depthWrite={false}
+                    depthTest={false}
+                />
+            </mesh>
+            <mesh receiveShadow position={[15, 9, 9]} rotation={[0, Math.PI / 2, 0]}>
+                <planeGeometry args={[24, 24, 1, 1]} />
+                <meshStandardMaterial
+                    color="white"
+                    side={DoubleSide}
+                    opacity={0.05}
+                    transparent
+                    depthWrite={false}
+                    depthTest={false}
+                />
+            </mesh>
+        </>
+    );
+}
+
 function App() {
     const [grid, setGrid] = useImmer(() => createGrid());
     const [turn, setTurn] = useState('X');
@@ -173,8 +205,8 @@ function App() {
     const onClick = (i: number, j: number, k: number) => {
         if (winner) return;
         setGrid((draft) => {
-            if (grid[k][j][i] !== 0) return;
-            draft[k][j][i] = turn;
+            if (grid[i][j][k] !== 0) return;
+            draft[i][j][k] = turn;
             if (checkWin(turn, grid, new Vector3(i, j, k))) {
                 setWinner(turn);
             }
@@ -188,15 +220,16 @@ function App() {
                 <Canvas shadows className="CanvasContainer">
                     <color args={[0, 0, 0]} attach="background" />
                     <Center>
+                        <Grid />
                         <OrbitControls
                             target={[0, 0, 0]}
                             maxPolarAngle={3}
                             autoRotate
                             autoRotateSpeed={4}
                         />
-                        {grid.map((_, i) => {
-                            return grid[i].map((_, j) => {
-                                return grid[i][j].map((item, k) => {
+                        {grid.map((plane, i) => {
+                            return plane.map((row, j) => {
+                                return row.map((item, k) => {
                                     if (item === 0) {
                                         if (
                                             i === hoveringCell?.[0] &&
@@ -207,7 +240,11 @@ function App() {
                                                 return (
                                                     <XBlock
                                                         opacity={0.5}
-                                                        position={[i * 5, j * 5, k * 5]}
+                                                        position={[
+                                                            i * BLOCK_DISTANCE,
+                                                            j * BLOCK_DISTANCE,
+                                                            k * BLOCK_DISTANCE
+                                                        ]}
                                                         key={`${i}${j}${k}`}
                                                     />
                                                 );
@@ -215,7 +252,11 @@ function App() {
                                                 return (
                                                     <OBlock
                                                         opacity={0.5}
-                                                        position={[i * 5, j * 5, k * 5]}
+                                                        position={[
+                                                            i * BLOCK_DISTANCE,
+                                                            j * BLOCK_DISTANCE,
+                                                            k * BLOCK_DISTANCE
+                                                        ]}
                                                         key={`${i}${j}${k}`}
                                                     />
                                                 );
@@ -226,7 +267,11 @@ function App() {
                                     if (item === 'X')
                                         return (
                                             <XBlock
-                                                position={[i * 5, j * 5, k * 5]}
+                                                position={[
+                                                    i * BLOCK_DISTANCE,
+                                                    j * BLOCK_DISTANCE,
+                                                    k * BLOCK_DISTANCE
+                                                ]}
                                                 key={`${i}${j}${k}`}
                                                 opacity={1}
                                             />
@@ -234,34 +279,15 @@ function App() {
 
                                     return (
                                         <OBlock
-                                            position={[i * 5, j * 5, k * 5]}
+                                            position={[
+                                                i * BLOCK_DISTANCE,
+                                                j * BLOCK_DISTANCE,
+                                                k * BLOCK_DISTANCE
+                                            ]}
                                             key={`${i}${j}${k}`}
                                             opacity={1}
                                         />
                                     );
-                                    // if ((i + j + k) % 2 === 0)
-                                    //     return (
-                                    //         <XBlock
-                                    //             position={[
-                                    //                 i * BLOCK_DISTANCE,
-                                    //                 j * BLOCK_DISTANCE,
-                                    //                 k * BLOCK_DISTANCE
-                                    //             ]}
-                                    //             key={`${i}${j}${k}`}
-                                    //             opacity={1}
-                                    //         />
-                                    //     );
-                                    // return (
-                                    //     <OBlock
-                                    //         position={[
-                                    //             i * BLOCK_DISTANCE,
-                                    //             j * BLOCK_DISTANCE,
-                                    //             k * BLOCK_DISTANCE
-                                    //         ]}
-                                    //         key={`${i}${j}${k}`}
-                                    //         opacity={1}
-                                    //     />
-                                    // );
                                 });
                             });
                         })}
@@ -269,18 +295,36 @@ function App() {
                     <ambientLight intensity={0.2} />
                     <pointLight position={[50, 200, 50]} intensity={0.75} />
                     <pointLight position={[-70, -200, 0]} intensity={0.35} />
-                    {/* <pointLight position={[0, 0, -200]} intensity={0.35} /> */}
+                    <EffectComposer multisampling={8}>
+                        <Bloom
+                            blendFunction={BlendFunction.ADD}
+                            intensity={0.4} // The bloom intensity.
+                            width={300} // render width
+                            height={300} // render height
+                            kernelSize={5} // blur kernel size
+                            luminanceThreshold={0.2} // luminance threshold. Raise this value to mask out darker elements in the scene.
+                            luminanceSmoothing={0.025} // smoothness of the luminance threshold. Range is [0, 1]
+                        />
+                        <Bloom
+                            kernelSize={KernelSize.HUGE}
+                            width={500} // render width
+                            height={500} // render height
+                            luminanceThreshold={0}
+                            luminanceSmoothing={0}
+                            intensity={0.1}
+                        />
+                    </EffectComposer>
                 </Canvas>
                 <div className={classNames('BoardContainer', { expanded })}>
                     <button className="ExpandButton" onClick={() => setExpanded(!expanded)}>
                         {expanded ? 'X' : 'O'}
                     </button>
                     <div className="BoardGrid">
-                        {grid.map((plane, k) => (
-                            <div className="BoardPlane" key={k}>
+                        {grid.map((plane, i) => (
+                            <div className="BoardPlane" key={i}>
                                 {plane.map((row, j) => (
                                     <React.Fragment key={j}>
-                                        {row.map((item, i) => (
+                                        {row.map((item, k) => (
                                             <button
                                                 onMouseEnter={() => setHoveringCell([i, j, k])}
                                                 onMouseLeave={() => setHoveringCell(null)}
