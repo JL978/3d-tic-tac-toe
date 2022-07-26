@@ -2,9 +2,10 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { DoubleSide, Group } from 'three';
 import { CustomThreeObj } from '../types';
+import { useControls } from 'leva';
 
-const COLOR = '#00ffd5';
-export default function OBlock({ position, opacity, lightRefs }: CustomThreeObj) {
+const COLOR = '#00dbcb';
+export default function OBlock({ position, opacity }: CustomThreeObj) {
     const ref = useRef<Group>(null!);
     useFrame((state, delta) => {
         ref.current.rotation.y += delta * 1.25;

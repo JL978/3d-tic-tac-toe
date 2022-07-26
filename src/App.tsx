@@ -1,205 +1,26 @@
-import React, { Suspense, useState, useRef, useMemo, useEffect, ReactNode } from 'react';
+import React, { Suspense, useState } from 'react';
 import { BlendFunction } from 'postprocessing';
 import { useImmer } from 'use-immer';
-import { Canvas, useThree, useFrame, extend } from '@react-three/fiber';
-import { OrbitControls, Center, OrthographicCamera } from '@react-three/drei';
-import { DoubleSide, Scene, Vector3 } from 'three';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Center, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
+import { Vector3 } from 'three';
 import classNames from 'classnames';
 import XBlock from './components/XBlock';
 import OBlock from './components/OBlock';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { KernelSize } from 'postprocessing';
-
-function createGrid(): Array<Array<Array<string | number>>> {
-    return new Array(4).fill(new Array(4).fill(new Array(4).fill(0)));
-}
-
-function getGridItemKey(i: number, j: number, k: number) {
-    return `${i},${j},${k}`;
-}
-
-const checkDirections = [
-    new Vector3(1, 0, 0),
-    new Vector3(0, 1, 0),
-    new Vector3(0, 0, 1),
-    new Vector3(1, 1, 0),
-    new Vector3(1, -1, 0),
-    new Vector3(1, 0, 1),
-    new Vector3(1, 0, -1),
-    new Vector3(0, 1, 1),
-    new Vector3(0, -1, 1),
-    new Vector3(1, 1, 1),
-    new Vector3(1, 1, -1),
-    new Vector3(-1, -1, 1),
-    new Vector3(-1, 1, 1)
-];
-
-const checkWin = (
-    turn: string,
-    board: Array<Array<Array<string | number>>>,
-    location: Vector3
-): boolean => {
-    for (const direction of checkDirections) {
-        // console.log('direction: ', direction);
-
-        const forward = location.clone();
-        const backward = location.clone();
-        let isCorrectDirection = true;
-        const combo = [location.clone()];
-
-        for (let i = 0; i < 3; i++) {
-            forward.addVectors(forward, direction);
-            backward.subVectors(backward, direction);
-
-            if (
-                forward.x >= 0 &&
-                forward.x < 4 &&
-                forward.y >= 0 &&
-                forward.y < 4 &&
-                forward.z >= 0 &&
-                forward.z < 4
-            ) {
-                if (board[forward.z][forward.y][forward.x] !== turn) {
-                    isCorrectDirection = false;
-                    continue;
-                }
-                combo.push(forward.clone());
-            }
-
-            if (
-                backward.x >= 0 &&
-                backward.x < 4 &&
-                backward.y >= 0 &&
-                backward.y < 4 &&
-                backward.z >= 0 &&
-                backward.z < 4
-            ) {
-                if (board[backward.z][backward.y][backward.x] !== turn) {
-                    isCorrectDirection = false;
-                    continue;
-                }
-                combo.push(backward.clone());
-            }
-        }
-        if (combo.length === 4) return true;
-    }
-
-    return false;
-};
-
-const BLOCK_DISTANCE = 6;
-
-function Grid() {
-    return (
-        <>
-            <mesh receiveShadow position={[9, 9, 3]}>
-                <planeGeometry args={[24, 24, 1, 1]} />
-                <meshStandardMaterial
-                    color="white"
-                    side={DoubleSide}
-                    opacity={0.05}
-                    transparent
-                    depthWrite={false}
-                    depthTest={false}
-                />
-            </mesh>
-            <mesh receiveShadow position={[9, 9, 9]}>
-                <planeGeometry args={[24, 24, 1, 1]} />
-                <meshStandardMaterial
-                    color="white"
-                    side={DoubleSide}
-                    opacity={0.05}
-                    transparent
-                    depthWrite={false}
-                    depthTest={false}
-                />
-            </mesh>
-            <mesh receiveShadow position={[9, 9, 15]}>
-                <planeGeometry args={[24, 24, 1, 1]} />
-                <meshStandardMaterial
-                    color="white"
-                    side={DoubleSide}
-                    opacity={0.05}
-                    transparent
-                    depthWrite={false}
-                    depthTest={false}
-                />
-            </mesh>
-            <mesh receiveShadow position={[9, 3, 9]} rotation={[Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[24, 24, 1, 1]} />
-                <meshStandardMaterial
-                    color="white"
-                    side={DoubleSide}
-                    opacity={0.05}
-                    transparent
-                    depthWrite={false}
-                    depthTest={false}
-                />
-            </mesh>
-            <mesh receiveShadow position={[9, 9, 9]} rotation={[Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[24, 24, 1, 1]} />
-                <meshStandardMaterial
-                    color="white"
-                    side={DoubleSide}
-                    opacity={0.05}
-                    transparent
-                    depthWrite={false}
-                    depthTest={false}
-                />
-            </mesh>
-            <mesh receiveShadow position={[9, 15, 9]} rotation={[Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[24, 24, 1, 1]} />
-                <meshStandardMaterial
-                    color="white"
-                    side={DoubleSide}
-                    opacity={0.05}
-                    transparent
-                    depthWrite={false}
-                    depthTest={false}
-                />
-            </mesh>
-            <mesh receiveShadow position={[3, 9, 9]} rotation={[0, Math.PI / 2, 0]}>
-                <planeGeometry args={[24, 24, 1, 1]} />
-                <meshStandardMaterial
-                    color="white"
-                    side={DoubleSide}
-                    opacity={0.05}
-                    transparent
-                    depthWrite={false}
-                    depthTest={false}
-                />
-            </mesh>
-            <mesh receiveShadow position={[9, 9, 9]} rotation={[0, Math.PI / 2, 0]}>
-                <planeGeometry args={[24, 24, 1, 1]} />
-                <meshStandardMaterial
-                    color="white"
-                    side={DoubleSide}
-                    opacity={0.05}
-                    transparent
-                    depthWrite={false}
-                    depthTest={false}
-                />
-            </mesh>
-            <mesh receiveShadow position={[15, 9, 9]} rotation={[0, Math.PI / 2, 0]}>
-                <planeGeometry args={[24, 24, 1, 1]} />
-                <meshStandardMaterial
-                    color="white"
-                    side={DoubleSide}
-                    opacity={0.05}
-                    transparent
-                    depthWrite={false}
-                    depthTest={false}
-                />
-            </mesh>
-        </>
-    );
-}
+import createGrid from './utils/createGrid';
+import checkWin from './utils/checkWin';
+import getGridItemKey from './utils/getGridItemKey';
+import { BLOCK_DISTANCE } from './constants';
+import Grid from './components/Grid';
+import BoardItem from './components/BoardItem';
 
 function App() {
     const [grid, setGrid] = useImmer(() => createGrid());
     const [turn, setTurn] = useState('X');
     const [winner, setWinner] = useState<null | string>(null);
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState(true);
     const [hoveringCell, setHoveringCell] = useState<null | number[]>(null);
 
     const onClick = (i: number, j: number, k: number) => {
@@ -208,6 +29,7 @@ function App() {
             if (grid[i][j][k] !== 0) return;
             draft[i][j][k] = turn;
             if (checkWin(turn, grid, new Vector3(i, j, k))) {
+                console.log('winner', turn);
                 setWinner(turn);
             }
             setTurn(turn === 'X' ? 'O' : 'X');
@@ -215,10 +37,15 @@ function App() {
     };
 
     return (
-        <Suspense fallback={null}>
+        <Suspense
+            fallback={
+                <div style={{ width: '100%', height: '100%', color: 'var(--backgound-color)' }}>
+                    Loading...
+                </div>
+            }>
             <div className="Container">
-                <Canvas shadows className="CanvasContainer">
-                    <color args={[0, 0, 0]} attach="background" />
+                <Canvas shadows className="CanvasContainer" camera={{ position: [-30, 0, 0] }}>
+                    <color args={['rgb(6,22,38)']} attach="background" />
                     <Center>
                         <Grid />
                         <OrbitControls
@@ -230,6 +57,7 @@ function App() {
                         {grid.map((plane, i) => {
                             return plane.map((row, j) => {
                                 return row.map((item, k) => {
+                                    const key = getGridItemKey(i, j, k);
                                     if (item === 0) {
                                         if (
                                             i === hoveringCell?.[0] &&
@@ -245,7 +73,7 @@ function App() {
                                                             j * BLOCK_DISTANCE,
                                                             k * BLOCK_DISTANCE
                                                         ]}
-                                                        key={`${i}${j}${k}`}
+                                                        key={key}
                                                     />
                                                 );
                                             } else {
@@ -257,7 +85,7 @@ function App() {
                                                             j * BLOCK_DISTANCE,
                                                             k * BLOCK_DISTANCE
                                                         ]}
-                                                        key={`${i}${j}${k}`}
+                                                        key={key}
                                                     />
                                                 );
                                             }
@@ -272,7 +100,7 @@ function App() {
                                                     j * BLOCK_DISTANCE,
                                                     k * BLOCK_DISTANCE
                                                 ]}
-                                                key={`${i}${j}${k}`}
+                                                key={key}
                                                 opacity={1}
                                             />
                                         );
@@ -284,7 +112,7 @@ function App() {
                                                 j * BLOCK_DISTANCE,
                                                 k * BLOCK_DISTANCE
                                             ]}
-                                            key={`${i}${j}${k}`}
+                                            key={key}
                                             opacity={1}
                                         />
                                     );
@@ -324,22 +152,43 @@ function App() {
                             <div className="BoardPlane" key={i}>
                                 {plane.map((row, j) => (
                                     <React.Fragment key={j}>
-                                        {row.map((item, k) => (
-                                            <button
-                                                onMouseEnter={() => setHoveringCell([i, j, k])}
-                                                onMouseLeave={() => setHoveringCell(null)}
-                                                className="BoardCell"
-                                                key={getGridItemKey(i, j, k)}
-                                                onClick={() => onClick(i, j, k)}>
-                                                {item !== 0 && item}
-                                            </button>
-                                        ))}
+                                        {row.map((item, k) => {
+                                            let itemType = null;
+                                            let opacity = 1;
+                                            if (item === 0) {
+                                                if (
+                                                    i === hoveringCell?.[0] &&
+                                                    j === hoveringCell?.[1] &&
+                                                    k === hoveringCell?.[2]
+                                                ) {
+                                                    itemType = turn;
+                                                    opacity = 0.3;
+                                                }
+                                            } else {
+                                                itemType = item;
+                                            }
+
+                                            return (
+                                                <button
+                                                    onMouseEnter={() => setHoveringCell([i, j, k])}
+                                                    onMouseLeave={() => setHoveringCell(null)}
+                                                    className="BoardCell"
+                                                    key={getGridItemKey(i, j, k)}
+                                                    onClick={() => onClick(i, j, k)}>
+                                                    {itemType && (
+                                                        <BoardItem
+                                                            itemType={itemType}
+                                                            opacity={opacity}
+                                                        />
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
                                     </React.Fragment>
                                 ))}
                             </div>
                         ))}
                     </div>
-                    {winner && <div>Winner: {winner}</div>}
                 </div>
             </div>
         </Suspense>

@@ -1,3 +1,7 @@
+:root{
+  --background-color: rgb(6,22,38);
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -21,6 +25,7 @@ body,
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background-color: var(--background-color);
 }
 
 
@@ -33,7 +38,6 @@ body,
 
 .BoardContainer {
   position: relative;
-  background-color: white;
   z-index: 1000;
   margin-top: 100vh;
   transition-duration: 200ms;
@@ -64,8 +68,55 @@ body,
 .BoardCell {
   aspect-ratio: 1/1;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  /* align-items: center;
+  justify-content: center; */
+  position: relative;
+  background-color: transparent;
+  border: 1px solid #fff;
+  filter:drop-shadow(0 0 2px rgb(176, 252, 252))
+          drop-shadow(0 0 6px rgb(38, 167, 226));
+}
+
+.BoardCell:first-child,
+.BoardCell:nth-child(2),
+.BoardCell:nth-child(3),
+.BoardCell:nth-child(4)
+{
+  border-top: none;;
+}
+
+.BoardCell:last-child,
+.BoardCell:nth-child(13),
+.BoardCell:nth-child(14),
+.BoardCell:nth-child(15)
+{
+  border-bottom: none;;
+}
+
+.BoardCell:first-child,
+.BoardCell:nth-child(5),
+.BoardCell:nth-child(9),
+.BoardCell:nth-child(13)
+{
+  border-left: none;;
+}
+
+.BoardCell:last-child,
+.BoardCell:nth-child(12),
+.BoardCell:nth-child(8),
+.BoardCell:nth-child(4)
+{
+  border-right: none;;
+}
+
+.BoardItem {
+  position: absolute;
+  margin: auto;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  color: white;
 }
 
 .ExpandButton {
@@ -81,7 +132,7 @@ body,
 @media only screen and (min-width: 600px) {
   .Container {
     display: grid;
-    grid-template-columns: 5fr 2fr;
+    grid-template-columns: 6fr 3fr;
     height: 100%;
   }
 
@@ -91,23 +142,22 @@ body,
 
   .BoardGrid {
     max-height: unset;
+    width: 80%;
   }
 
   .BoardContainer {
     margin-top: 0;
     height: 100vh;
     overflow: auto;
+    display: flex;
   }
 
   .BoardContainer.expanded {
     transform: translateY(0);
   }
 }
-@media only screen and (min-width: 1008px) {
-  .BoardContainer {
-    display: flex;
-  }
 
+@media only screen and (min-width: 1008px) {
   .BoardGrid {
     width: 100%;
     grid-template-columns: repeat(2, 1fr);

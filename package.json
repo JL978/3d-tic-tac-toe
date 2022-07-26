@@ -16,10 +16,12 @@
     "@react-three/postprocessing": "^2.3.2",
     "classnames": "^2.3.1",
     "immer": "^9.0.15",
+    "leva": "^0.9.29",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "three": "^0.140.2",
-    "use-immer": "^0.7.0"
+    "use-immer": "^0.7.0",
+    "vite-plugin-svgr": "^2.2.1"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",

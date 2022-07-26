@@ -3,8 +3,9 @@ import { useFrame } from '@react-three/fiber';
 import { BoxBufferGeometry, DoubleSide, Group, Mesh, Vector3 } from 'three';
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CustomThreeObj } from '../types';
+import { useControls } from 'leva';
 
-export default function XBlock({ position, opacity, lightRefs }: CustomThreeObj) {
+export default function XBlock({ position, opacity }: CustomThreeObj) {
     const geometry = useMemo(() => {
         const firstGeo = new BoxBufferGeometry(1, 5, 1);
         const secondGeo = new BoxBufferGeometry(1, 5, 1);
@@ -23,7 +24,7 @@ export default function XBlock({ position, opacity, lightRefs }: CustomThreeObj)
     return (
         <mesh ref={ref} geometry={geometry} position={position} castShadow receiveShadow>
             <meshStandardMaterial
-                emissive={'#ff3d3d'}
+                emissive={'#fff450'}
                 side={DoubleSide}
                 color={[0, 0, 0]}
                 opacity={opacity}

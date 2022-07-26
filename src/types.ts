@@ -3,5 +3,4 @@ import type { Vector3 as Vector3Prop } from '@react-three/fiber/dist/declaration
 export type CustomThreeObj = {
     position?: Vector3Prop;
     opacity?: number;
-    lightRefs?: any[]
 };
