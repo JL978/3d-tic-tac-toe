@@ -9,7 +9,7 @@ const checkDirections = [
     new Vector3(1, 0, 1),
     new Vector3(1, 0, -1),
     new Vector3(0, 1, 1),
-    new Vector3(0, -1, 1),
+    new Vector3(0, 1, -1),
     new Vector3(1, 1, 1),
     new Vector3(1, 1, -1),
     new Vector3(-1, -1, 1),
@@ -30,6 +30,7 @@ export default function checkWin(
         const combo = [location.clone()];
 
         for (let i = 0; i < 3; i++) {
+            // console.log(combo);
             forward.addVectors(forward, direction);
             backward.subVectors(backward, direction);
 
@@ -41,7 +42,7 @@ export default function checkWin(
                 forward.z >= 0 &&
                 forward.z < 4
             ) {
-                if (board[forward.z][forward.y][forward.x] !== turn) {
+                if (board[forward.x][forward.y][forward.z] !== turn) {
                     isCorrectDirection = false;
                     continue;
                 }
@@ -56,7 +57,7 @@ export default function checkWin(
                 backward.z >= 0 &&
                 backward.z < 4
             ) {
-                if (board[backward.z][backward.y][backward.x] !== turn) {
+                if (board[backward.x][backward.y][backward.z] !== turn) {
                     isCorrectDirection = false;
                     continue;
                 }

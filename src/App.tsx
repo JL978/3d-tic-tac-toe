@@ -1,9 +1,9 @@
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { BlendFunction } from 'postprocessing';
 import { useImmer } from 'use-immer';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Center, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
-import { Vector3 } from 'three';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { OrbitControls, Center, OrthographicCamera, Text } from '@react-three/drei';
+import { DoubleSide, Mesh, Vector3 } from 'three';
 import classNames from 'classnames';
 import XBlock from './components/XBlock';
 import OBlock from './components/OBlock';
@@ -15,6 +15,69 @@ import getGridItemKey from './utils/getGridItemKey';
 import { BLOCK_DISTANCE } from './constants';
 import Grid from './components/Grid';
 import BoardItem from './components/BoardItem';
+import { useControls } from 'leva';
+
+const CustomOrbitControls: React.FC<{
+    winner: string | null;
+    turn: string;
+    onReset: () => void;
+}> = ({ winner, turn, onReset }) => {
+    const { camera } = useThree();
+    const textRef = useRef<Mesh>(null);
+    const buttonRef = useRef<Mesh>(null);
+    const buttonTextRef = useRef<Mesh>(null);
+    const [hover, setHover] = useState(false);
+
+    useEffect(() => {
+        document.body.style.cursor = hover ? 'pointer' : 'default';
+    }, [hover]);
+
+    useFrame(() => {
+        [textRef, buttonRef, buttonTextRef].forEach((ref) => {
+            ref.current?.quaternion.copy(camera.quaternion);
+        });
+    });
+
+    return (
+        <>
+            <Text
+                ref={textRef}
+                color={'#bdfff0'}
+                scale={[30, 30, 30]}
+                position={[9, winner ? 28 : 24, 9]}
+                anchorX="center">
+                {winner ? 'Winner: ' + winner : 'Turn: ' + turn}
+            </Text>
+            {winner && (
+                <>
+                    <mesh
+                        ref={buttonRef}
+                        position={[9, 24, 9]}
+                        onPointerOver={() => setHover(true)}
+                        onPointerOut={() => setHover(false)}
+                        onClick={onReset}>
+                        <planeGeometry args={[10, 3]} />
+                        <meshBasicMaterial color="white" side={DoubleSide} />
+                    </mesh>
+                    <Text
+                        ref={buttonTextRef}
+                        scale={[17, 17, 17]}
+                        color="black"
+                        position={[9, 24, 9]}>
+                        Play Again
+                    </Text>
+                </>
+            )}
+            <OrbitControls
+                target={[0, 0, 0]}
+                maxPolarAngle={3}
+                autoRotate
+                autoRotateSpeed={3}
+                camera={camera}
+            />
+        </>
+    );
+};
 
 function App() {
     const [grid, setGrid] = useImmer(() => createGrid());
@@ -29,11 +92,16 @@ function App() {
             if (grid[i][j][k] !== 0) return;
             draft[i][j][k] = turn;
             if (checkWin(turn, grid, new Vector3(i, j, k))) {
-                console.log('winner', turn);
                 setWinner(turn);
             }
             setTurn(turn === 'X' ? 'O' : 'X');
         });
+    };
+
+    const onReset = () => {
+        setGrid(() => createGrid());
+        setTurn(winner === 'X' ? 'O' : 'X');
+        setWinner(null);
     };
 
     return (
@@ -44,16 +112,11 @@ function App() {
                 </div>
             }>
             <div className="Container">
-                <Canvas shadows className="CanvasContainer" camera={{ position: [-30, 0, 0] }}>
+                <Canvas shadows className="CanvasContainer" camera={{ position: [-30, -3, 0] }}>
                     <color args={['rgb(6,22,38)']} attach="background" />
                     <Center>
+                        <CustomOrbitControls turn={turn} winner={winner} onReset={onReset} />
                         <Grid />
-                        <OrbitControls
-                            target={[0, 0, 0]}
-                            maxPolarAngle={3}
-                            autoRotate
-                            autoRotateSpeed={4}
-                        />
                         {grid.map((plane, i) => {
                             return plane.map((row, j) => {
                                 return row.map((item, k) => {
@@ -62,7 +125,8 @@ function App() {
                                         if (
                                             i === hoveringCell?.[0] &&
                                             j === hoveringCell?.[1] &&
-                                            k === hoveringCell?.[2]
+                                            k === hoveringCell?.[2] &&
+                                            !winner
                                         ) {
                                             if (turn === 'X') {
                                                 return (
@@ -159,7 +223,8 @@ function App() {
                                                 if (
                                                     i === hoveringCell?.[0] &&
                                                     j === hoveringCell?.[1] &&
-                                                    k === hoveringCell?.[2]
+                                                    k === hoveringCell?.[2] &&
+                                                    !winner
                                                 ) {
                                                     itemType = turn;
                                                     opacity = 0.3;
