@@ -17,6 +17,7 @@ import Grid from './components/Grid';
 import BoardItem from './components/BoardItem';
 import { AnimatePresence } from 'framer-motion';
 import { motion } from 'framer-motion-3d';
+import { ReactComponent as ChevronDown } from './components/chevron-down-solid.svg';
 
 const CustomOrbitControls: React.FC<{
     winner: string | null;
@@ -210,8 +211,10 @@ function App() {
                     </EffectComposer>
                 </Canvas>
                 <div className={classNames('BoardContainer', { expanded })}>
-                    <button className="ExpandButton" onClick={() => setExpanded(!expanded)}>
-                        {expanded ? 'X' : 'O'}
+                    <button
+                        className={classNames('ExpandButton', { expanded })}
+                        onClick={() => setExpanded(!expanded)}>
+                        <ChevronDown width={20} height={20} />
                     </button>
                     <div className="BoardGrid">
                         {grid.map((plane, i) => (

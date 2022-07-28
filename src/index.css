@@ -121,12 +121,33 @@ body,
 
 .ExpandButton {
   position: absolute; 
-  right: 0; 
+  right: 1rem; 
   top: 0;
   transform: translateY(-100%);
   padding: 0.5em;
   border-width: 0;
+  background-color: transparent;
+  color: white;
+  border: 2px solid white;
+  border-bottom: none;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
   aspect-ratio: 1/1;
+  filter:drop-shadow(0 0 2px rgb(176, 252, 252))
+          drop-shadow(0 0 6px rgb(38, 167, 226));
+}
+
+.ExpandButton.expanded {
+  border-bottom: 1px solid white;
+}
+
+.ExpandButton svg {
+  transform: rotate(0deg);
+  transition: transform 0.3s ease-in-out;
+}
+
+.ExpandButton.expanded svg {
+  transform: rotate(180deg);
 }
 
 @media only screen and (min-width: 600px) {
