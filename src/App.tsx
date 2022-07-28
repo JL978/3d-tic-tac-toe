@@ -44,7 +44,7 @@ const CustomOrbitControls: React.FC<{
                 ref={textRef}
                 color={'#bdfff0'}
                 scale={[30, 30, 30]}
-                position={[9, winner ? 28 : 24, 9]}
+                position={[9, winner ? 28 : 26, 9]}
                 anchorX="center">
                 {winner ? 'Winner: ' + winner : 'Turn: ' + turn}
             </Text>

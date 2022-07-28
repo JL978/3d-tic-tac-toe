@@ -22,15 +22,12 @@ export default function checkWin(
     location: Vector3
 ): boolean {
     for (const direction of checkDirections) {
-        // console.log('direction: ', direction);
-
         const forward = location.clone();
         const backward = location.clone();
         let isCorrectDirection = true;
         const combo = [location.clone()];
 
         for (let i = 0; i < 3; i++) {
-            // console.log(combo);
             forward.addVectors(forward, direction);
             backward.subVectors(backward, direction);
 
@@ -43,8 +40,7 @@ export default function checkWin(
                 forward.z < 4
             ) {
                 if (board[forward.x][forward.y][forward.z] !== turn) {
-                    isCorrectDirection = false;
-                    continue;
+                    break;
                 }
                 combo.push(forward.clone());
             }
@@ -58,13 +54,14 @@ export default function checkWin(
                 backward.z < 4
             ) {
                 if (board[backward.x][backward.y][backward.z] !== turn) {
-                    isCorrectDirection = false;
-                    continue;
+                    break;
                 }
                 combo.push(backward.clone());
             }
         }
-        if (combo.length === 4) return true;
+        if (combo.length === 4) {
+            return true;
+        }
     }
 
     return false;
