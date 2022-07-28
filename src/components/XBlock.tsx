@@ -1,9 +1,9 @@
 import { useRef, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { MeshProps, useFrame } from '@react-three/fiber';
 import { BoxBufferGeometry, DoubleSide, Group, Mesh, Vector3 } from 'three';
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CustomThreeObj } from '../types';
-import { useControls } from 'leva';
+import { motion } from 'framer-motion-3d';
 
 export default function XBlock({ position, opacity }: CustomThreeObj) {
     const geometry = useMemo(() => {
@@ -16,13 +16,40 @@ export default function XBlock({ position, opacity }: CustomThreeObj) {
         return mergeBufferGeometries([firstGeo, secondGeo]);
     }, []);
 
-    const ref = useRef<Mesh>(null!);
+    const ref = useRef<MeshProps>(null!);
     useFrame((state, delta) => {
-        ref.current.rotation.y += delta;
+        if (!ref.current.rotation) return;
+        (ref.current.rotation as any).y += delta;
     });
 
     return (
-        <mesh ref={ref} geometry={geometry} position={position} castShadow receiveShadow>
+        <motion.mesh
+            initial={{
+                opacity: 0,
+                scale: 0.1
+            }}
+            animate={{
+                opacity: 1,
+                scale: 1,
+                transition: {
+                    duration: 0.1,
+                    type: 'spring', //Why is this not working???
+                    stiffness: 150,
+                    bounce: 0.5
+                }
+            }}
+            exit={{
+                opacity: 0,
+                scale: 0,
+                transition: {
+                    duration: 0.01
+                }
+            }}
+            ref={ref}
+            geometry={geometry}
+            position={position}
+            castShadow
+            receiveShadow>
             <meshStandardMaterial
                 emissive={'#fff450'}
                 side={DoubleSide}
@@ -30,6 +57,6 @@ export default function XBlock({ position, opacity }: CustomThreeObj) {
                 opacity={opacity}
                 transparent
             />
-        </mesh>
+        </motion.mesh>
     );
 }

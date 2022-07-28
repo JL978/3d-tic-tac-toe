@@ -15,7 +15,8 @@ import getGridItemKey from './utils/getGridItemKey';
 import { BLOCK_DISTANCE } from './constants';
 import Grid from './components/Grid';
 import BoardItem from './components/BoardItem';
-import { useControls } from 'leva';
+import { AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion-3d';
 
 const CustomOrbitControls: React.FC<{
     winner: string | null;
@@ -49,24 +50,23 @@ const CustomOrbitControls: React.FC<{
                 {winner ? 'Winner: ' + winner : 'Turn: ' + turn}
             </Text>
             {winner && (
-                <>
-                    <mesh
-                        ref={buttonRef}
-                        position={[9, 24, 9]}
-                        onPointerOver={() => setHover(true)}
-                        onPointerOut={() => setHover(false)}
-                        onClick={onReset}>
+                <motion.group
+                    position={[9, 24, 9]}
+                    onClick={onReset}
+                    onPointerOver={() => setHover(true)}
+                    onPointerOut={() => setHover(false)}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    initial={{ scale: 0.5 }}
+                    animate={{ scale: 1 }}>
+                    <mesh ref={buttonRef}>
                         <planeGeometry args={[10, 3]} />
                         <meshBasicMaterial color="white" side={DoubleSide} />
                     </mesh>
-                    <Text
-                        ref={buttonTextRef}
-                        scale={[17, 17, 17]}
-                        color="black"
-                        position={[9, 24, 9]}>
+                    <Text ref={buttonTextRef} scale={[17, 17, 17]} color="black">
                         Play Again
                     </Text>
-                </>
+                </motion.group>
             )}
             <OrbitControls
                 target={[0, 0, 0]}
@@ -117,48 +117,61 @@ function App() {
                     <Center>
                         <CustomOrbitControls turn={turn} winner={winner} onReset={onReset} />
                         <Grid />
-                        {grid.map((plane, i) => {
-                            return plane.map((row, j) => {
-                                return row.map((item, k) => {
-                                    const key = getGridItemKey(i, j, k);
-                                    if (item === 0) {
-                                        if (
-                                            i === hoveringCell?.[0] &&
-                                            j === hoveringCell?.[1] &&
-                                            k === hoveringCell?.[2] &&
-                                            !winner
-                                        ) {
-                                            if (turn === 'X') {
-                                                return (
-                                                    <XBlock
-                                                        opacity={0.5}
-                                                        position={[
-                                                            i * BLOCK_DISTANCE,
-                                                            j * BLOCK_DISTANCE,
-                                                            k * BLOCK_DISTANCE
-                                                        ]}
-                                                        key={key}
-                                                    />
-                                                );
-                                            } else {
-                                                return (
-                                                    <OBlock
-                                                        opacity={0.5}
-                                                        position={[
-                                                            i * BLOCK_DISTANCE,
-                                                            j * BLOCK_DISTANCE,
-                                                            k * BLOCK_DISTANCE
-                                                        ]}
-                                                        key={key}
-                                                    />
-                                                );
+                        <AnimatePresence>
+                            {grid.map((plane, i) => {
+                                return plane.map((row, j) => {
+                                    return row.map((item, k) => {
+                                        const key = getGridItemKey(i, j, k);
+                                        if (item === 0) {
+                                            if (
+                                                i === hoveringCell?.[0] &&
+                                                j === hoveringCell?.[1] &&
+                                                k === hoveringCell?.[2] &&
+                                                !winner
+                                            ) {
+                                                if (turn === 'X') {
+                                                    return (
+                                                        <XBlock
+                                                            opacity={0.5}
+                                                            position={[
+                                                                i * BLOCK_DISTANCE,
+                                                                j * BLOCK_DISTANCE,
+                                                                k * BLOCK_DISTANCE
+                                                            ]}
+                                                            key={key}
+                                                        />
+                                                    );
+                                                } else {
+                                                    return (
+                                                        <OBlock
+                                                            opacity={0.5}
+                                                            position={[
+                                                                i * BLOCK_DISTANCE,
+                                                                j * BLOCK_DISTANCE,
+                                                                k * BLOCK_DISTANCE
+                                                            ]}
+                                                            key={key}
+                                                        />
+                                                    );
+                                                }
                                             }
+                                            return;
                                         }
-                                        return;
-                                    }
-                                    if (item === 'X')
+                                        if (item === 'X')
+                                            return (
+                                                <XBlock
+                                                    position={[
+                                                        i * BLOCK_DISTANCE,
+                                                        j * BLOCK_DISTANCE,
+                                                        k * BLOCK_DISTANCE
+                                                    ]}
+                                                    key={key}
+                                                    opacity={1}
+                                                />
+                                            );
+
                                         return (
-                                            <XBlock
+                                            <OBlock
                                                 position={[
                                                     i * BLOCK_DISTANCE,
                                                     j * BLOCK_DISTANCE,
@@ -168,21 +181,10 @@ function App() {
                                                 opacity={1}
                                             />
                                         );
-
-                                    return (
-                                        <OBlock
-                                            position={[
-                                                i * BLOCK_DISTANCE,
-                                                j * BLOCK_DISTANCE,
-                                                k * BLOCK_DISTANCE
-                                            ]}
-                                            key={key}
-                                            opacity={1}
-                                        />
-                                    );
+                                    });
                                 });
-                            });
-                        })}
+                            })}
+                        </AnimatePresence>
                     </Center>
                     <ambientLight intensity={0.2} />
                     <pointLight position={[50, 200, 50]} intensity={0.75} />
