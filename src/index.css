@@ -1,5 +1,6 @@
-:root{
-  --background-color: rgb(6,22,38);
+:root {
+  --background-color: rgb(6, 22, 38);
+  /* --background-color: blue; */
 }
 
 body {
@@ -28,9 +29,14 @@ body,
   background-color: var(--background-color);
 }
 
+.Container {
+  height: 100%;
+  /* overflow: auto; */
+  /* padding-bottom: 100px; */
+}
 
 .CanvasContainer {
-  height: 100vh !important;
+  height: 100% !important;
   position: fixed !important;
   top: 0;
   z-index: 0;
@@ -39,9 +45,9 @@ body,
 .BoardContainer {
   position: relative;
   z-index: 1000;
-  margin-top: 100vh;
+  margin-top: calc(100vh - 110px);
   transition-duration: 200ms;
-  transition-property: transform; 
+  transition-property: transform;
 }
 
 .BoardGrid {
@@ -73,40 +79,39 @@ body,
   position: relative;
   background-color: transparent;
   border: 1px solid #fff;
-  filter:drop-shadow(0 0 2px rgb(176, 252, 252))
-          drop-shadow(0 0 6px rgb(38, 167, 226));
+  filter: drop-shadow(0 0 2px rgb(176, 252, 252)) drop-shadow(0 0 6px rgb(38, 167, 226));
 }
 
 .BoardCell:first-child,
 .BoardCell:nth-child(2),
 .BoardCell:nth-child(3),
-.BoardCell:nth-child(4)
-{
-  border-top: none;;
+.BoardCell:nth-child(4) {
+  border-top: none;
+  ;
 }
 
 .BoardCell:last-child,
 .BoardCell:nth-child(13),
 .BoardCell:nth-child(14),
-.BoardCell:nth-child(15)
-{
-  border-bottom: none;;
+.BoardCell:nth-child(15) {
+  border-bottom: none;
+  ;
 }
 
 .BoardCell:first-child,
 .BoardCell:nth-child(5),
 .BoardCell:nth-child(9),
-.BoardCell:nth-child(13)
-{
-  border-left: none;;
+.BoardCell:nth-child(13) {
+  border-left: none;
+  ;
 }
 
 .BoardCell:last-child,
 .BoardCell:nth-child(12),
 .BoardCell:nth-child(8),
-.BoardCell:nth-child(4)
-{
-  border-right: none;;
+.BoardCell:nth-child(4) {
+  border-right: none;
+  ;
 }
 
 .BoardItem {
@@ -120,8 +125,8 @@ body,
 }
 
 .ExpandButton {
-  position: absolute; 
-  right: 1rem; 
+  position: absolute;
+  right: 1rem;
   top: 0;
   transform: translateY(-100%);
   padding: 0.5em;
@@ -133,8 +138,7 @@ body,
   border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem;
   aspect-ratio: 1/1;
-  filter:drop-shadow(0 0 2px rgb(176, 252, 252))
-          drop-shadow(0 0 6px rgb(38, 167, 226));
+  filter: drop-shadow(0 0 2px rgb(176, 252, 252)) drop-shadow(0 0 6px rgb(38, 167, 226));
 }
 
 .ExpandButton.expanded {
