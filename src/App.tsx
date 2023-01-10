@@ -65,7 +65,7 @@ const CustomOrbitControls: React.FC<{
                         <planeGeometry args={[10, 3]} />
                         <meshBasicMaterial color="white" side={DoubleSide} />
                     </mesh>
-                    <Text ref={buttonTextRef} scale={[17, 17, 17]} color="black">
+                    <Text ref={buttonTextRef} scale={[1.5, 1.5, 1.5]} color="black">
                         Play Again
                     </Text>
                 </motion.group>
