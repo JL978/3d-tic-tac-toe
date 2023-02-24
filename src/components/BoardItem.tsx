@@ -1,7 +1,8 @@
 import { FC } from 'react';
-import { ReactComponent as O } from './o.svg';
-import { ReactComponent as X } from './x.svg';
+import { ReactComponent as O } from './svgs/o.svg';
+import { ReactComponent as X } from './svgs/x.svg';
 
+//For 2D grid
 type BoardItemProps = {
     itemType: string;
     opacity?: number;

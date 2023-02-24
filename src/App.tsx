@@ -2,7 +2,7 @@ import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { BlendFunction } from 'postprocessing';
 import { useImmer } from 'use-immer';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Center, OrthographicCamera, Text } from '@react-three/drei';
+import { OrbitControls, Center, Text } from '@react-three/drei';
 import { DoubleSide, Mesh, Vector3 } from 'three';
 import classNames from 'classnames';
 import XBlock from './components/XBlock';
@@ -12,13 +12,13 @@ import { KernelSize } from 'postprocessing';
 import createGrid from './utils/createGrid';
 import checkWin from './utils/checkWin';
 import getGridItemKey from './utils/getGridItemKey';
-import { BLOCK_DISTANCE } from './constants';
+import { BLOCK_DISTANCE } from './utils/constants';
 import Grid from './components/Grid';
 import BoardItem from './components/BoardItem';
 import { AnimatePresence } from 'framer-motion';
 import { motion } from 'framer-motion-3d';
-import { ReactComponent as BurgerMenu } from './components/burger-menu.svg';
-import { ReactComponent as CloseMenu } from './components/close.svg';
+import { ReactComponent as BurgerMenu } from './components/svgs/burger-menu.svg';
+import { ReactComponent as CloseMenu } from './components/svgs/close.svg';
 
 const CustomOrbitControls: React.FC<{
     winner: string | null;
@@ -36,6 +36,7 @@ const CustomOrbitControls: React.FC<{
     }, [hover]);
 
     useFrame(() => {
+        // Make it so that these objects always face the camera
         [textRef, buttonRef, buttonTextRef].forEach((ref) => {
             ref.current?.quaternion.copy(camera.quaternion);
         });
@@ -115,79 +116,22 @@ function App() {
             }>
             <div className="Container">
                 <Canvas shadows className="CanvasContainer" camera={{ position: [-30, -3, 0] }}>
-                    <color args={['rgb(6,22,38)']} attach="background" />
+                    {/* Game stuff */}
                     <Center>
                         <CustomOrbitControls turn={turn} winner={winner} onReset={onReset} />
                         <Grid />
                         <AnimatePresence>
-                            {grid.map((plane, i) => {
-                                return plane.map((row, j) => {
-                                    return row.map((item, k) => {
-                                        const key = getGridItemKey(i, j, k);
-                                        if (item === 0) {
-                                            if (
-                                                i === hoveringCell?.[0] &&
-                                                j === hoveringCell?.[1] &&
-                                                k === hoveringCell?.[2] &&
-                                                !winner
-                                            ) {
-                                                if (turn === 'X') {
-                                                    return (
-                                                        <XBlock
-                                                            opacity={0.5}
-                                                            position={[
-                                                                i * BLOCK_DISTANCE,
-                                                                j * BLOCK_DISTANCE,
-                                                                k * BLOCK_DISTANCE
-                                                            ]}
-                                                            key={key}
-                                                        />
-                                                    );
-                                                } else {
-                                                    return (
-                                                        <OBlock
-                                                            opacity={0.5}
-                                                            position={[
-                                                                i * BLOCK_DISTANCE,
-                                                                j * BLOCK_DISTANCE,
-                                                                k * BLOCK_DISTANCE
-                                                            ]}
-                                                            key={key}
-                                                        />
-                                                    );
-                                                }
-                                            }
-                                            return;
-                                        }
-                                        if (item === 'X')
-                                            return (
-                                                <XBlock
-                                                    position={[
-                                                        i * BLOCK_DISTANCE,
-                                                        j * BLOCK_DISTANCE,
-                                                        k * BLOCK_DISTANCE
-                                                    ]}
-                                                    key={key}
-                                                    opacity={1}
-                                                />
-                                            );
-
-                                        return (
-                                            <OBlock
-                                                position={[
-                                                    i * BLOCK_DISTANCE,
-                                                    j * BLOCK_DISTANCE,
-                                                    k * BLOCK_DISTANCE
-                                                ]}
-                                                key={key}
-                                                opacity={1}
-                                            />
-                                        );
-                                    });
-                                });
-                            })}
+                            <ThreeDBoard
+                                grid={grid}
+                                turn={turn}
+                                winner={winner}
+                                hoveringCell={hoveringCell}
+                            />
                         </AnimatePresence>
                     </Center>
+
+                    {/* Environment stuff */}
+                    <color args={['rgb(6,22,38)']} attach="background" />
                     <ambientLight intensity={0.2} />
                     <pointLight position={[50, 200, 50]} intensity={0.75} />
                     <pointLight position={[-70, -200, 0]} intensity={0.35} />
@@ -218,51 +162,133 @@ function App() {
                 </button>
                 <div className={classNames('BoardContainer', { expanded })}>
                     <div className="BoardGrid">
-                        {grid.map((plane, i) => (
-                            <div className="BoardPlane" key={i}>
-                                {plane.map((row, j) => (
-                                    <React.Fragment key={j}>
-                                        {row.map((item, k) => {
-                                            let itemType = null;
-                                            let opacity = 1;
-                                            if (item === 0) {
-                                                if (
-                                                    i === hoveringCell?.[0] &&
-                                                    j === hoveringCell?.[1] &&
-                                                    k === hoveringCell?.[2] &&
-                                                    !winner
-                                                ) {
-                                                    itemType = turn;
-                                                    opacity = 0.3;
-                                                }
-                                            } else {
-                                                itemType = item;
-                                            }
-
-                                            return (
-                                                <button
-                                                    onMouseEnter={() => setHoveringCell([i, j, k])}
-                                                    onMouseLeave={() => setHoveringCell(null)}
-                                                    className="BoardCell"
-                                                    key={getGridItemKey(i, j, k)}
-                                                    onClick={() => onClick(i, j, k)}>
-                                                    {itemType && (
-                                                        <BoardItem
-                                                            itemType={itemType}
-                                                            opacity={opacity}
-                                                        />
-                                                    )}
-                                                </button>
-                                            );
-                                        })}
-                                    </React.Fragment>
-                                ))}
-                            </div>
-                        ))}
+                        <TwoDBoard
+                            grid={grid}
+                            turn={turn}
+                            winner={winner}
+                            onClick={onClick}
+                            hoveringCell={hoveringCell}
+                            setHoveringCell={setHoveringCell}
+                        />
                     </div>
                 </div>
             </div>
         </Suspense>
+    );
+}
+
+function ThreeDBoard({
+    grid,
+    turn,
+    winner,
+    hoveringCell
+}: {
+    grid: any[][][];
+    turn: string;
+    winner: null | string;
+    hoveringCell: null | number[];
+}) {
+    return (
+        <>
+            {grid.map((plane, i) =>
+                plane.map((row, j) =>
+                    row.map((item, k) => {
+                        const isEmpty = item === 0;
+                        // Dont render empty cells if there is a winner
+                        if (isEmpty && winner) return;
+
+                        const key = getGridItemKey(i, j, k);
+                        const isHovering =
+                            i === hoveringCell?.[0] &&
+                            j === hoveringCell?.[1] &&
+                            k === hoveringCell?.[2];
+
+                        // Dont render empty cells if they are not being hovered
+                        if (isEmpty && !isHovering) return;
+
+                        const blockState = isEmpty ? turn : item;
+
+                        // Render empty cells if they are being hovered
+                        const Block = blockState === 'X' ? XBlock : OBlock;
+                        return (
+                            <Block
+                                opacity={isEmpty ? 0.5 : 1}
+                                position={[
+                                    i * BLOCK_DISTANCE,
+                                    j * BLOCK_DISTANCE,
+                                    k * BLOCK_DISTANCE
+                                ]}
+                                key={key}
+                            />
+                        );
+                    })
+                )
+            )}
+        </>
+    );
+}
+
+function TwoDBoard({
+    grid,
+    turn,
+    winner,
+    hoveringCell,
+    setHoveringCell,
+    onClick
+}: {
+    grid: any[][][];
+    turn: string;
+    winner: null | string;
+    hoveringCell: null | number[];
+    setHoveringCell: (cell: null | number[]) => void;
+    onClick: (i: number, j: number, k: number) => void;
+}) {
+    return (
+        <>
+            {grid.map((plane, i) => (
+                <div className="BoardPlane" key={i}>
+                    {plane.map((row, j) => (
+                        <React.Fragment key={j}>
+                            {row.map((item, k) => {
+                                const isHovering =
+                                    i === hoveringCell?.[0] &&
+                                    j === hoveringCell?.[1] &&
+                                    k === hoveringCell?.[2];
+
+                                let itemType = null;
+                                let opacity = 1;
+
+                                if (item === 0 && isHovering) {
+                                    itemType = turn;
+                                    opacity = 0.3;
+                                }
+
+                                if (item !== 0) {
+                                    itemType = item;
+                                }
+
+                                if (winner) {
+                                    itemType = null;
+                                }
+
+                                return (
+                                    <button
+                                        onMouseEnter={() => setHoveringCell([i, j, k])}
+                                        onMouseLeave={() => setHoveringCell(null)}
+                                        className="BoardCell"
+                                        key={getGridItemKey(i, j, k)}
+                                        onClick={() => onClick(i, j, k)}>
+                                        {itemType && (
+                                            <BoardItem itemType={itemType} opacity={opacity} />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </React.Fragment>
+                    ))}
+                </div>
+            ))}
+        </>
     );
 }
 
